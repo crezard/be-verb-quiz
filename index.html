@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>영어 퀴즈 학습 센터</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -40,11 +39,10 @@
 
         <section class="space-y-4">
             <h2 class="text-xl font-bold border-l-4 border-primary-blue pl-3">
-                현재 제공 퀴즈 목록 (1개)
+                현재 제공 퀴즈 목록 (2개)
             </h2>
             
-            <!-- 퀴즈 항목: Be동사 현재형 -->
-            <a href="https://crezard.github.io/be-verb-quiz/be-verb-quiz.html" class="block">
+            <a href="be-verb-quiz.html" class="block">
                 <div class="p-4 bg-gray-50 rounded-lg border border-gray-200 transition duration-300 hover:shadow-md hover:border-primary-blue flex items-center justify-between">
                     <div>
                         <p class="text-lg font-semibold">1. Be동사 현재형 (Am, Is, Are) 퀴즈 10제</p>
@@ -55,11 +53,20 @@
                     </svg>
                 </div>
             </a>
-            
-            <!-- (나중에 퀴즈를 추가할 경우 여기에 링크를 추가하세요) -->
-            <!-- <a href="future_quiz.html" class="block">...</a> -->
 
-        </section>
+            <a href="present-progressive-quiz.html" class="block">
+                <div class="p-4 bg-gray-50 rounded-lg border border-gray-200 transition duration-300 hover:shadow-md hover:border-primary-blue flex items-center justify-between">
+                    <div>
+                        <p class="text-lg font-semibold">2. 현재 진행형 (Be + -ing) 퀴즈 10제</p>
+                        <p class="text-sm text-gray-500">난이도: ★★☆☆☆ (기초/중)</p>
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                </div>
+            </a>
+            
+            </section>
 
         <footer class="text-center text-xs text-gray-400 pt-4 border-t">
             © 2025 English Quiz Learning Platform. All rights reserved.
@@ -68,4 +75,3 @@
 
 </body>
 </html>
-
