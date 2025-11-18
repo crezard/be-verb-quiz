@@ -44,7 +44,6 @@
             padding: 0.25rem 0.75rem;
             border-radius: 9999px; /* Full rounded */
             font-weight: 600;
-            margin-bottom: 0.75rem;
         }
 
         /* 질문 텍스트 스타일 */
@@ -52,7 +51,6 @@
             font-size: 1.125rem; /* text-xl */
             font-weight: 700;
             margin-bottom: 1rem;
-            /* 질문 박스 스타일 제거 후, 텍스트 자체에 여백을 줌 */
             padding: 0.5rem 0; 
         }
 
@@ -110,15 +108,25 @@
 
     <!-- Quiz Container - 클래식 디자인 적용 -->
     <div id="quiz-container" class="w-full max-w-2xl bg-white rounded-xl p-6 sm:p-8 space-y-6">
-        <h1 class="text-2xl font-bold text-center mb-6 border-b pb-3">✅ Be동사 현재형 퀴즈 10제</h1>
-
-        <!-- Question Counter -->
-        <div id="counter" class="text-center text-gray-500 font-medium text-base">문제 1 / 10</div>
+        
+        <!-- HEADER: Home 버튼과 제목을 포함하는 영역 -->
+        <header class="flex items-center justify-center mb-6 border-b pb-3 relative">
+            <!-- Home Button: 클릭 시 중단 확인 모달 호출 (배경색 변경됨) -->
+            <button onclick="showConfirmModal()" class="absolute left-0 top-1 px-3 py-1 bg-primary-blue text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition duration-300">
+                🏠 Home
+            </button>
+            <h1 class="text-2xl font-bold text-center">Be동사 현재형 퀴즈 10제</h1>
+        </header>
 
         <!-- Question Area - 질문 박스 제거, 내용 바로 표시 -->
         <div id="question-area" class="space-y-4 pt-4"> 
             
-            <span id="question-number-display" class="question-number"></span>
+            <!-- NEW FLEX CONTAINER for Question Number and Counter -->
+            <div class="flex items-center justify-between mb-4">
+                <span id="question-number-display" class="question-number"></span>
+                <div id="counter" class="text-gray-500 font-medium text-base"></div>
+            </div>
+            
             <p id="question-text" class="question-text">질문을 로드하는 중...</p>
             
             <!-- Options Container (UL로 변경) -->
@@ -145,13 +153,29 @@
             
             <!-- Button Group: Home 및 다시 시작 버튼 -->
             <div class="flex flex-col sm:flex-row gap-4 pt-2">
-                <!-- Home Button (<a> 태그 사용, 경로: /) -->
-                <a href="https://crezard.github.io/be-verb-quiz/index.html" id="home-button" class="w-full py-3 bg-gray-500 text-white font-bold rounded-lg hover:bg-gray-600 transition duration-300">
+                <!-- Home Button (<a> 태그 사용, 경로: /) (배경색 변경됨) -->
+                <!-- Home 버튼은 루트 경로('/') 즉, 새로운 index.html 페이지로 이동합니다. -->
+                <a href="/" id="home-button" class="w-full py-3 bg-primary-blue text-white font-bold rounded-lg hover:bg-blue-700 transition duration-300">
                     Home
                 </a>
                 <!-- 다시 시작 버튼 -->
                 <button class="w-full py-3 bg-primary-blue text-white font-bold rounded-lg hover:bg-blue-700 transition duration-300" onclick="startQuiz()">
                     다시 시작
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Confirmation Modal (Message Box) -->
+    <div id="confirm-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 w-11/12 max-w-sm shadow-xl space-y-4">
+            <p class="text-lg font-semibold text-gray-800">퀴즈를 중단하고 홈으로 돌아가시겠습니까?</p>
+            <div class="flex justify-end gap-3">
+                <button onclick="closeConfirmModal()" class="px-4 py-2 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 transition duration-300">
+                    취소
+                </button>
+                <button onclick="goToHome()" class="px-4 py-2 bg-wrong-red text-white font-medium rounded-lg hover:bg-red-700 transition duration-300">
+                    중단하고 이동
                 </button>
             </div>
         </div>
@@ -242,7 +266,7 @@
                 ]
             },
             {
-                question: "The pencil ____ long. 빈칸에 알맞은 be동사 현재형의 축약형은?",
+                question: "The pencil ____ not long. 빈칸에 알맞은 be동사 현재형의 축약형은?",
                 options: [
                     { text: "aren't", isCorrect: false, rationale: "'aren't'는 복수 주어의 부정 축약형입니다." },
                     { text: "amn't", isCorrect: false, rationale: "이러한 형태의 축약형은 사용하지 않습니다." },
@@ -259,7 +283,6 @@
         // DOM 요소 가져오기
         const counterElement = document.getElementById('counter');
         const questionNumberDisplay = document.getElementById('question-number-display');
-        const questionTextElement = document.getElementById('question-text');
         const optionsContainer = document.getElementById('options-container');
         const feedbackArea = document.getElementById('feedback-area');
         const rationaleTextElement = document.getElementById('rationale-text');
@@ -268,7 +291,23 @@
         const resultsArea = document.getElementById('results-area');
         const finalScoreElement = document.getElementById('final-score');
         const resultMessageElement = document.getElementById('result-message');
+        const questionTextElement = document.getElementById('question-text');
 
+
+        // Modal control functions
+        function showConfirmModal() {
+            document.getElementById('confirm-modal').classList.remove('hidden');
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirm-modal').classList.add('hidden');
+        }
+        
+        function goToHome() {
+            // Home 버튼의 경로는 / (index.html)입니다.
+            window.location.href = "/";
+            closeConfirmModal();
+        }
 
         // 퀴즈 시작 (초기화)
         function startQuiz() {
@@ -397,5 +436,3 @@
     </script>
 </body>
 </html>
-
-
