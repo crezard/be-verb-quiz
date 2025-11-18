@@ -101,6 +101,47 @@
             font-weight: bold;
             color: #059669; /* Correct-green */
         }
+        
+        /* 인쇄 시 스타일 */
+        @media print {
+            body {
+                background-color: white !important;
+                color: black !important;
+                margin: 0;
+            }
+            #quiz-container {
+                border: none !important;
+                box-shadow: none !important;
+                width: 100% !important;
+                max-width: none !important;
+                padding: 0 !important;
+            }
+            /* 퀴즈 영역 (문제 푸는 동안의 UI)와 모달 숨기기 */
+            #question-area, #confirm-modal, #next-button, #counter, .option-button, .question-number, .options-list, footer, header button {
+                display: none !important;
+            }
+            /* 결과 영역만 표시 */
+            #results-area {
+                display: block !important;
+                padding: 20px;
+                border: none;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .print-only {
+                display: block !important;
+            }
+            /* 인쇄용 틀린 문제 목록 스타일 */
+            .review-item {
+                border-bottom: 1px solid #e5e7eb;
+                padding-bottom: 15px;
+                margin-bottom: 15px;
+            }
+        }
+        .print-only {
+            display: none;
+        }
 
     </style>
 </head>
@@ -110,7 +151,7 @@
     <div id="quiz-container" class="w-full max-w-2xl bg-white rounded-xl p-6 sm:p-8 space-y-6">
         
         <!-- HEADER: Home 버튼과 제목을 포함하는 영역 -->
-        <header class="flex items-center justify-center mb-6 border-b pb-3 relative">
+        <header class="flex items-center justify-center mb-6 border-b pb-3 relative no-print">
             <!-- Home Button: 클릭 시 중단 확인 모달 호출 (배경색 변경됨) -->
             <button onclick="showConfirmModal()" class="absolute left-0 top-1 px-3 py-1 bg-primary-blue text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition duration-300">
                 🏠 Home
@@ -145,23 +186,36 @@
             </button>
         </div>
 
-        <!-- Results Area (수정된 버튼 그룹 적용) -->
-        <div id="results-area" class="text-center hidden space-y-6 pt-4">
-            <h2 class="text-3xl font-extrabold text-gray-800">퀴즈 완료!</h2>
-            <p class="text-6xl font-extrabold text-primary-blue" id="final-score">0 / 10</p>
-            <p class="text-lg text-gray-600" id="result-message">수고하셨습니다. 다시 한번 도전해 보세요!</p>
+        <!-- Results Area (수정된 버튼 그룹 및 검토 영역 적용) -->
+        <div id="results-area" class="hidden space-y-6 pt-4">
+            <div class="text-center space-y-2">
+                <h2 class="text-3xl font-extrabold text-gray-800">퀴즈 완료!</h2>
+                <p class="text-6xl font-extrabold text-primary-blue" id="final-score">0 / 10</p>
+                <p class="text-lg text-gray-600" id="result-message">수고하셨습니다. 다시 한번 도전해 보세요!</p>
+            </div>
             
-            <!-- Button Group: Home 및 다시 시작 버튼 -->
-            <div class="flex flex-col sm:flex-row gap-4 pt-2">
-                <!-- Home Button (<a> 태그 사용, 경로: index.html) -->
-                <!-- Home 버튼은 루트 경로('/') 즉, 새로운 index.html 페이지로 이동합니다. -->
-                <a href="index.html" id="home-button" class="w-full py-3 bg-primary-blue text-white font-bold rounded-lg hover:bg-blue-700 transition duration-300">
+            <!-- Button Group: Home, 다시 시작, 인쇄 버튼 -->
+            <div class="flex flex-col sm:flex-row gap-4 pt-4 border-t no-print">
+                <!-- Home Button -->
+                <a href="index.html" id="home-button" class="w-full py-3 bg-primary-blue text-white text-center font-bold rounded-lg hover:bg-blue-700 transition duration-300">
                     Home
                 </a>
                 <!-- 다시 시작 버튼 -->
                 <button class="w-full py-3 bg-primary-blue text-white font-bold rounded-lg hover:bg-blue-700 transition duration-300" onclick="startQuiz()">
                     다시 시작
                 </button>
+                <!-- 인쇄 버튼 -->
+                <button class="w-full py-3 bg-gray-500 text-white font-bold rounded-lg hover:bg-gray-600 transition duration-300" onclick="printResults()">
+                    결과 인쇄
+                </button>
+            </div>
+
+            <!-- 틀린 문제 검토 영역 -->
+            <div id="incorrect-review-area" class="pt-8 border-t mt-8">
+                <h3 class="text-xl font-bold mb-4 border-l-4 border-wrong-red pl-3">틀린 문제 검토 (<span id="incorrect-count">0</span>개)</h3>
+                <div id="incorrect-list" class="space-y-6">
+                    <!-- Incorrect questions will be listed here -->
+                </div>
             </div>
         </div>
     </div>
@@ -182,7 +236,7 @@
     </div>
 
     <script>
-        // 퀴즈 데이터 (be-verb-present-quiz 파일의 내용 기반)
+        // 퀴즈 데이터
         const quizData = [
             {
                 question: "I ____ a student. 빈칸에 알맞은 be동사 현재형은?",
@@ -279,6 +333,7 @@
         let currentQuestionIndex = 0;
         let score = 0;
         let answered = false; // 현재 질문의 답변 여부
+        let quizResults = []; // 새롭게 추가된 퀴즈 결과 저장 배열
 
         // DOM 요소 가져오기
         const counterElement = document.getElementById('counter');
@@ -292,6 +347,8 @@
         const finalScoreElement = document.getElementById('final-score');
         const resultMessageElement = document.getElementById('result-message');
         const questionTextElement = document.getElementById('question-text');
+        const incorrectListElement = document.getElementById('incorrect-list');
+        const incorrectCountElement = document.getElementById('incorrect-count');
 
 
         // Modal control functions
@@ -308,12 +365,18 @@
             window.location.href = "index.html";
             closeConfirmModal();
         }
+        
+        // 인쇄 기능
+        function printResults() {
+            window.print();
+        }
 
         // 퀴즈 시작 (초기화)
         function startQuiz() {
             currentQuestionIndex = 0;
             score = 0;
             answered = false;
+            quizResults = []; // 퀴즈 재시작 시 결과 배열 초기화
 
             // UI 표시 전환
             questionArea.classList.remove('hidden');
@@ -387,6 +450,16 @@
                 }
             });
 
+            // 결과 저장
+            quizResults.push({
+                questionNum: currentQuestionIndex + 1,
+                question: question.question,
+                isCorrect: isCorrect,
+                selectedAnswer: question.options[selectedIndex].text,
+                correctAnswer: correctOptionText,
+                rationale: question.options[selectedIndex].rationale,
+            });
+
             // 점수 업데이트 및 피드백 표시
             if (isCorrect) {
                 score++;
@@ -412,6 +485,33 @@
             }
         }
 
+        // 틀린 문제 목록을 렌더링
+        function renderIncorrectAnswers() {
+            const incorrect = quizResults.filter(r => !r.isCorrect);
+            incorrectCountElement.textContent = incorrect.length;
+            incorrectListElement.innerHTML = '';
+
+            if (incorrect.length === 0) {
+                incorrectListElement.innerHTML = '<p class="text-gray-600 text-center py-4">🎉 틀린 문제가 없습니다. 완벽해요!</p>';
+                return;
+            }
+
+            incorrect.forEach(result => {
+                const item = document.createElement('div');
+                item.className = 'review-item p-4 border border-red-200 rounded-lg bg-red-50 space-y-2';
+
+                item.innerHTML = `
+                    <p class="font-bold text-base text-red-700">틀린 문제 ${result.questionNum}번: ${result.question}</p>
+                    <p class="text-sm text-gray-700 ml-2">선택한 답: <span class="font-medium text-wrong-red">${result.selectedAnswer}</span></p>
+                    <div class="p-2 bg-white rounded-md border border-gray-300">
+                        <p class="text-sm font-medium text-correct-green">정답: ${result.correctAnswer}</p>
+                        <p class="text-xs text-gray-600">해설: ${result.rationale}</p>
+                    </div>
+                `;
+                incorrectListElement.appendChild(item);
+            });
+        }
+
         // 결과 표시
         function showResults() {
             questionArea.classList.add('hidden');
@@ -428,6 +528,9 @@
                 message = '🤔 수고하셨습니다. Be동사 규칙을 다시 한번 복습해 보는 것이 좋겠어요.';
             }
             resultMessageElement.textContent = message;
+
+            // 틀린 문제 검토 영역 렌더링
+            renderIncorrectAnswers();
         }
 
         // 페이지 로드 시 퀴즈 시작
@@ -436,4 +539,3 @@
     </script>
 </body>
 </html>
-
